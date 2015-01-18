@@ -29,15 +29,10 @@ class CLI {
         Map<String, Long> players = parsePlayersList();
         FutBINWatcher watcher = new FutBINWatcher();
 
-        if (delay == null) {
+        while (true) {
             List<Player> prices = watcher.getPrices(platform, players);
             printPrices(prices);
-        } else {
-            while (true) {
-                List<Player> prices = watcher.getPrices(platform, players);
-                printPrices(prices);
-                Thread.sleep(delay * 1000);
-            }
+            Thread.sleep(delay * 1000);
         }
     }
 
@@ -133,19 +128,19 @@ class CLI {
             throw new UnsupportedPlatformException(String.format("Platform \"%s\" not supported.", args[0]));
         }
 
-        result[1] = null;
+        result[1] = 120;
         if (args.length >= 2) {
             try {
-                result[1] = Integer.parseInt(args[1]);
+                result[1] = 60 * Integer.parseInt(args[1]);
             } catch (NumberFormatException e) {
-                System.err.println("The delay is not a number.");
+                System.err.println("The specified refresh delay is not a number.");
                 System.exit(-1);
             }
 
             if ((Integer) result[1] < 120) {
                 result[1] = 120;
-                System.out.println("The delay cannot be lower than 120 seconds in order to not flood " +
-                        "FutBIN's servers. Delay forced to 120 seconds.");
+                System.out.println("The refresh delay cannot be lower than 120 seconds in order to not flood " +
+                        "FutBIN's servers. Refresh delay forced to 2 minutes.");
             }
         }
 

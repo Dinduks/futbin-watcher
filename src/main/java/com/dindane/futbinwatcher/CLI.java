@@ -5,9 +5,12 @@ import com.bethecoder.ascii_table.ASCIITableHeader;
 import com.dindane.futbinwatcher.exceptions.IdParsingException;
 import com.dindane.futbinwatcher.exceptions.UnsupportedPlatformException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.File;
-import java.net.ConnectException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.List;
@@ -16,10 +19,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class CLI {
-    public static void main(String[] args) throws ConnectException, InterruptedException, UnsupportedPlatformException, IdParsingException {
+    public static void main(String[] args) throws IOException, InterruptedException, UnsupportedPlatformException, IdParsingException {
         Object[] parsedArguments = parseArguments(args);
         Platform platform = (Platform) parsedArguments[0];
         Integer delay = (Integer) parsedArguments[1];
+
+        checkForUpdates();
 
         Map<String, Long> players = parsePlayersList();
         FutBINWatcher watcher = new FutBINWatcher();
@@ -33,6 +38,37 @@ class CLI {
                 printPrices(prices);
                 Thread.sleep(delay * 1000);
             }
+        }
+    }
+
+    private static void checkForUpdates() {
+        String localVersion = null;
+        try {
+            localVersion = IOUtils.toString(Thread.currentThread().getContextClassLoader().getResourceAsStream("com.dindane.futbinwatcher/version"), "UTF-8");
+        } catch (IOException e) {
+            return;
+        }
+
+        try {
+            URL versionURL = new URL("https://raw.githubusercontent.com/Dinduks/futbin-watcher/master/src/main/resources/version");
+            InputStream in = versionURL.openStream();
+            String lastVersion = IOUtils.toString(in);
+
+            if (!lastVersion.equals(localVersion)) {
+                String message = "\u001B[31m" +
+                        "FUTBIN Watcher is not up to date. Please visit " +
+                        "https://dinduks.github.com/futbin-watcher/ in order to download the last version." +
+                        "\u001B[0m\n";
+                System.out.println(message);
+            }
+        } catch (IOException e) {
+            String message = "\u001B[31m" +
+                    "An error happened while checking for new versions which " +
+                    "might mean there is a new one. Please visit " +
+                    "https://dinduks.github.com/futbin-watcher/ and check by yourself.\n" +
+                    "Current version: " + localVersion + "." +
+                    "\u001B[0m\n";
+            System.out.println(message);
         }
     }
 

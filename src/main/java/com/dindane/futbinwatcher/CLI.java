@@ -9,7 +9,6 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.net.ConnectException;
 import java.text.DecimalFormat;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,18 +16,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class CLI {
-    private final static String[] platforms = {"pc", "xbox", "ps"};
-
     public static void main(String[] args) throws ConnectException, InterruptedException, UnsupportedPlatformException, IdParsingException {
         if (args.length < 1) {
             System.err.println("No enough arguments. Please specify the platform, and optionally the refresh rate.");
             System.exit(-1);
         }
 
-        String platform = args[0];
-        if (!Arrays.asList(platforms).contains(platform)) {
-            System.err.println(String.format("Platform \"%s\" not supported.", platform));
-            System.exit(-1);
+        Platform platform;
+
+        try {
+            platform = Platform.valueOf(args[0].toUpperCase());
+        } catch (Exception e) {
+            throw new UnsupportedPlatformException(String.format("Platform \"%s\" not supported.", args[0]));
         }
 
         Integer delay = null;
@@ -67,7 +66,7 @@ class CLI {
      * Extracts the player's ID from a string
      */
     private static String cleanFUTId(String id) throws IdParsingException {
-        Pattern p = Pattern.compile("\\d+");
+        Pattern p = Pattern.compile("\\d+.*$");
         Matcher m = p.matcher(id);
 
         if (m.find()) {

@@ -44,13 +44,13 @@ class CLI {
     private static void checkForUpdates() {
         String localVersion = null;
         try {
-            localVersion = IOUtils.toString(Thread.currentThread().getContextClassLoader().getResourceAsStream("com.dindane.futbinwatcher/version"), "UTF-8");
+            localVersion = IOUtils.toString(Thread.currentThread().getContextClassLoader().getResourceAsStream("com/dindane/futbinwatcher/version"), "UTF-8");
         } catch (IOException e) {
             return;
         }
 
         try {
-            URL versionURL = new URL("https://raw.githubusercontent.com/Dinduks/futbin-watcher/master/src/main/resources/version");
+            URL versionURL = new URL("https://raw.githubusercontent.com/Dinduks/futbin-watcher/master/src/main/resources/com/dindane/futbinwatcher/version");
             InputStream in = versionURL.openStream();
             String lastVersion = IOUtils.toString(in);
 

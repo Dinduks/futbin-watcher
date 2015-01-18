@@ -1,11 +1,13 @@
 package com.dindane.futbinwatcher;
 
 import com.bethecoder.ascii_table.ASCIITable;
+import com.bethecoder.ascii_table.ASCIITableHeader;
 import com.dindane.futbinwatcher.exceptions.UnsupportedPlatformException;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.net.ConnectException;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -45,20 +47,28 @@ class CLI {
         Map<String, Long> players = parsePlayersList();
 
         FutBINWatcher watcher = new FutBINWatcher();
-        List<Player> prices = prices = watcher.getPrices(platform, players);
 
         if (delay != null) {
             while (true) {
+                List<Player> prices = watcher.getPrices(platform, players);
+                clearConsole();
                 printPrices(prices);
                 Thread.sleep(delay * 1000);
             }
         } else {
+            List<Player> prices = watcher.getPrices(platform, players);
             printPrices(prices);
         }
     }
 
     private static void printPrices(List<Player> players) {
-        String[] header = {"Name", "Target price", "Lowest BIN", "Difference"};
+        ASCIITableHeader[] header = {
+                new ASCIITableHeader("Name", ASCIITable.ALIGN_LEFT),
+                new ASCIITableHeader("Target price"),
+                new ASCIITableHeader("Lowest BIN"),
+                new ASCIITableHeader("Difference")
+        };
+
         ASCIITable.getInstance().printTable(header, listToString2DArray(players));
     }
 
@@ -67,17 +77,17 @@ class CLI {
 
         for (int i = 0; i < players.size(); i++) {
             data[i][0] = players.get(i).getName();
-            data[i][1] = players.get(i).getTargetPrice().toString();
-            data[i][2] = players.get(i).getLowestBIN().toString();
-            data[i][3] = Long.toString(players.get(i).getTargetPrice() - players.get(i).getLowestBIN());
+            data[i][1] = formatNumber(players.get(i).getTargetPrice());
+            data[i][2] = formatNumber(players.get(i).getLowestBIN());
+            data[i][3] = formatNumber(players.get(i).getTargetPrice() - players.get(i).getLowestBIN());
         }
 
         for (int i = 0; i < 4; i++) data[players.size()][i] = "";
 
         data[players.size() + 1][0] = "Total";
-        data[players.size() + 1][1] = Long.toString(totalTargetPrice(players));
-        data[players.size() + 1][2] = Long.toString(totalLowestBIN(players));
-        data[players.size() + 1][3] = Long.toString(totalTargetPrice(players) - totalLowestBIN(players));
+        data[players.size() + 1][1] = formatNumber(totalTargetPrice(players));
+        data[players.size() + 1][2] = formatNumber(totalLowestBIN(players));
+        data[players.size() + 1][3] = formatNumber(totalTargetPrice(players) - totalLowestBIN(players));
 
         return data;
     }
@@ -92,6 +102,11 @@ class CLI {
         Long total = 0L;
         for (Player player : players) total += player.getLowestBIN();
         return total;
+    }
+
+    private static String formatNumber(Long n) {
+        DecimalFormat formatter = new DecimalFormat("#,###");
+        return formatter.format(n);
     }
 
     private static Map<String, Long> parsePlayersList() {
@@ -112,5 +127,17 @@ class CLI {
         }
 
         return players;
+    }
+
+    public final static void clearConsole()
+    {
+        try {
+            final String os = System.getProperty("os.name");
+            if (os.contains("Windows")) {
+                Runtime.getRuntime().exec("cls");
+            } else {
+                Runtime.getRuntime().exec("clear");
+            }
+        } catch (final Exception e) {}
     }
 }

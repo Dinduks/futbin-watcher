@@ -1,0 +1,13 @@
+
+vim src/main/resources/com/dindane/futbinwatcher/version
+vim pom.xml
+vim run
+vim run.bat
+
+mvn clean install
+
+cd ..
+rm -rf futbin-watcher/**.zip futbin-watcher/**.jar
+cp futbin-watcher/target/futbin-watcher-**-jar-with-dependencies.jar futbin-watcher/
+zip -r futbin-watcher/futbin-watcher.zip futbin-watcher/**jar futbin-watcher/run** futbin-watcher/players_list.txt
+cd -

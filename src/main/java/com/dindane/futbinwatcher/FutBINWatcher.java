@@ -12,20 +12,22 @@ import java.util.List;
 import java.util.Map;
 
 public class FutBINWatcher {
+    private static final String urlPattern = "http://%s.com/player/%s";
+
     public List<Player> getPrices(String platform, Map<String, Long> players) throws ConnectException, UnsupportedPlatformException {
         List<Player> playersList = new ArrayList<>();
 
-        String website = (platform.equals("pc")) ? "futpc.com" : "futbin.com";
+        String website = (platform.equals("pc")) ? "futpc" : "futbin";
 
-        for (Map.Entry<String, Long> linkAndPrice : players.entrySet()) {
-            String fullURL = "http://" + website + linkAndPrice.getKey();
+        for (Map.Entry<String, Long> idAndPrice : players.entrySet()) {
+            String url = String.format(urlPattern, website, idAndPrice.getKey());
 
             Document doc;
 
             try {
-                doc = Jsoup.connect(fullURL).get();
+                doc = Jsoup.connect(url).get();
             } catch (IOException e) {
-                throw new ConnectException(String.format("Could not connect to \"%s\".", fullURL));
+                throw new ConnectException(String.format("Could not connect to \"%s\".", url));
             }
 
             String playerName;
@@ -52,7 +54,7 @@ public class FutBINWatcher {
                 throw new UnsupportedPlatformException(String.format("Platform \"%s\" not supported.", platform));
             }
 
-            playersList.add(new Player(playerName, linkAndPrice.getKey(), linkAndPrice.getValue(),
+            playersList.add(new Player(playerName, idAndPrice.getKey(), idAndPrice.getValue(),
                     lowestBin, lowestBin2, lowestBin3));
         }
 

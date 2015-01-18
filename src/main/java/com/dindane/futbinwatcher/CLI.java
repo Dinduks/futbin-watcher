@@ -2,6 +2,7 @@ package com.dindane.futbinwatcher;
 
 import com.bethecoder.ascii_table.ASCIITable;
 import com.bethecoder.ascii_table.ASCIITableHeader;
+import com.dindane.futbinwatcher.exceptions.IdParsingException;
 import com.dindane.futbinwatcher.exceptions.UnsupportedPlatformException;
 import org.apache.commons.io.FileUtils;
 
@@ -12,11 +13,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class CLI {
     private final static String[] platforms = {"pc", "xbox", "ps"};
 
-    public static void main(String[] args) throws ConnectException, InterruptedException, UnsupportedPlatformException {
+    public static void main(String[] args) throws ConnectException, InterruptedException, UnsupportedPlatformException, IdParsingException {
         if (args.length < 1) {
             System.err.println("No enough arguments. Please specify the platform, and optionally the refresh rate.");
             System.exit(-1);
@@ -60,6 +63,20 @@ class CLI {
         }
     }
 
+    /**
+     * Extracts the player's ID from a string
+     */
+    private static String cleanFUTId(String id) throws IdParsingException {
+        Pattern p = Pattern.compile("\\d+");
+        Matcher m = p.matcher(id);
+
+        if (m.find()) {
+            return m.group(0);
+        } else {
+            throw new IdParsingException(String.format("Could not extract the player's id from \"%s\".", id));
+        }
+    }
+
     private static String colorize(String s) {
         if (s.contains("-")) {
             return "\u001B[31m" + s + "\u001B[0m";
@@ -93,7 +110,7 @@ class CLI {
         return data;
     }
 
-    private static Map<String, Long> parsePlayersList() {
+    private static Map<String, Long> parsePlayersList() throws IdParsingException {
         Map<String, Long> players = new HashMap<>();
 
         File file = new File("players_list");
@@ -101,7 +118,7 @@ class CLI {
             List<String> lines = FileUtils.readLines(file, "UTF-8");
             for (String line : lines) {
                 if (line.length() == 0) continue;
-                String link = line.split(" ")[0];
+                String link = cleanFUTId(line.split(" ")[0]);
                 Long price = Long.parseLong(line.split(" ")[1]);
                 players.put(link, price);
             }
@@ -119,7 +136,7 @@ class CLI {
                 new ASCIITableHeader("Name", ASCIITable.ALIGN_LEFT),
                 new ASCIITableHeader("Target price"),
                 new ASCIITableHeader("Lowest BIN"),
-                new ASCIITableHeader("Difference")//, ASCIITable.DEFAULT_HEADER_ALIGN, ASCIITable.ALIGN_RIGHT)
+                new ASCIITableHeader("Difference")
         };
 
         String table = ASCIITable.getInstance().getTable(header, listToString2DArray(players));

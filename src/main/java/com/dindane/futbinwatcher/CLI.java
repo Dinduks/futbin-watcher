@@ -19,11 +19,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class CLI {
+    private static String COLOR_RED = null;
+    private static String COLOR_GREEN = null;
+    private static String COLOR_RESET = null;
+
     public static void main(String[] args) throws IOException, InterruptedException, UnsupportedPlatformException, IdParsingException {
         Object[] parsedArguments = parseArguments(args);
         Platform platform = (Platform) parsedArguments[0];
         Integer delay = (Integer) parsedArguments[1];
 
+        initColors();
         checkForUpdates();
 
         Map<String, Long> players = parsePlayersList();
@@ -50,19 +55,19 @@ class CLI {
             String lastVersion = IOUtils.toString(in);
 
             if (!lastVersion.equals(localVersion)) {
-                String message = "\u001B[31m" +
+                String message = COLOR_RED +
                         "FUTBIN Watcher is not up to date. Please visit " +
                         "https://dinduks.github.com/futbin-watcher/ in order to download the last version." +
-                        "\u001B[0m\n";
+                        COLOR_RESET + "\n";
                 System.out.println(message);
             }
         } catch (IOException e) {
-            String message = "\u001B[31m" +
+            String message = COLOR_RED +
                     "An error happened while checking for new versions which " +
                     "might mean there is a new one. Please visit " +
                     "https://dinduks.github.com/futbin-watcher/ and check by yourself.\n" +
                     "Current version: " + localVersion + "." +
-                    "\u001B[0m\n";
+                    COLOR_RESET + "\n";
             System.out.println(message);
         }
     }
@@ -83,14 +88,26 @@ class CLI {
 
     private static String colorize(String s) {
         if (s.contains("-")) {
-            return "\u001B[31m" + s + "\u001B[0m";
+            return COLOR_RED + s + COLOR_RESET;
         } else {
-            return "\u001B[32m" + s + "\u001B[0m";
+            return COLOR_GREEN + s + COLOR_RESET;
         }
     }
 
     private static String formatNumber(Long n) {
         return new DecimalFormat("#,###").format(n);
+    }
+
+    private static void initColors() {
+        if (System.getProperty("os.name").contains("Windows")) {
+            COLOR_RED = "";
+            COLOR_GREEN = "";
+            COLOR_RESET = "";
+        } else {
+            COLOR_RED = "\u001B[31m";
+            COLOR_GREEN = "\u001B[32m";
+            COLOR_RESET = "\u001B[0m";
+        }
     }
 
     private static String[][] listToString2DArray(List<Player> players) {
@@ -177,7 +194,7 @@ class CLI {
         };
 
         String table = ASCIITable.getInstance().getTable(header, listToString2DArray(players));
-        table = table.replace("\u001B[3", "         \u001B[3");
+        table = table.replace("\u001B[31", "         \u001B[31").replace("\u001B[32", "         \u001B[32");
         System.out.println(table);
     }
 

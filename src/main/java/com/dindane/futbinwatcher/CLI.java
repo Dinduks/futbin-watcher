@@ -37,7 +37,17 @@ class CLI {
 
         while (true) {
             List<Player> prices = watcher.getPrices(platform, players);
-            printPrices(prices);
+            List<Player> buyPrices = new ArrayList<>();
+            List<Player> sellPrices = new ArrayList<>();
+
+            for (Player player : prices) {
+                if (player.getAction().equals(Action.SELL)) sellPrices.add(player);
+                else buyPrices.add(player);
+            }
+
+            if (buyPrices.size() > 0) printPrices(buyPrices, Action.BUY);
+            if (sellPrices.size() > 0) printPrices(sellPrices, Action.SELL);
+
             Thread.sleep(delay * 1000);
         }
     }
@@ -111,20 +121,16 @@ class CLI {
         }
     }
 
-    private static String[][] listToString2DArray(List<Player> players) {
+    private static String[][] listToString2DArray(List<Player> players, Action action) {
         String[][] data = new String[players.size() + 2][5];
+        Integer mult = (action.equals(Action.BUY)) ? 1 : -1;
 
         for (int i = 0; i < players.size(); i++) {
+            data[i][0] = (action.equals(Action.BUY)) ? "B" : "S";
             data[i][1] = players.get(i).getName();
             data[i][2] = formatNumber(players.get(i).getTargetPrice());
             data[i][3] = formatNumber(players.get(i).getLowestBIN());
-            if (players.get(i).getAction().equals(Action.BUY)) {
-                data[i][0] = "B";
-                data[i][4] = colorize(formatNumber(players.get(i).getTargetPrice() - players.get(i).getLowestBIN()));
-            } else {
-                data[i][0] = "S";
-                data[i][4] = colorize(formatNumber(-1 * (players.get(i).getTargetPrice() - players.get(i).getLowestBIN())));
-            }
+            data[i][4] = colorize(formatNumber(mult * (players.get(i).getTargetPrice() - players.get(i).getLowestBIN())));
         }
 
         for (int i = 0; i < 5; i++) data[players.size()][i] = "";
@@ -133,7 +139,7 @@ class CLI {
         data[players.size() + 1][1] = "  Total";
         data[players.size() + 1][2] = formatNumber(totalTargetPrice(players));
         data[players.size() + 1][3] = formatNumber(totalLowestBIN(players));
-        data[players.size() + 1][4] = colorize(formatNumber(totalTargetPrice(players) - totalLowestBIN(players)));
+        data[players.size() + 1][4] = colorize(formatNumber(mult * (totalTargetPrice(players) - totalLowestBIN(players))));
 
         return data;
     }
@@ -233,7 +239,7 @@ class CLI {
         }
     }
 
-    private static void printPrices(List<Player> players) {
+    private static void printPrices(List<Player> players, Action action) {
         ASCIITableHeader[] header = {
                 new ASCIITableHeader(" "),
                 new ASCIITableHeader("Name", ASCIITable.ALIGN_LEFT),
@@ -242,7 +248,7 @@ class CLI {
                 new ASCIITableHeader("Difference")
         };
 
-        String table = ASCIITable.getInstance().getTable(header, listToString2DArray(players));
+        String table = ASCIITable.getInstance().getTable(header, listToString2DArray(players, action));
         table = table.replace("\u001B[31", "         \u001B[31").replace("\u001B[32", "         \u001B[32");
         System.out.println(table);
     }

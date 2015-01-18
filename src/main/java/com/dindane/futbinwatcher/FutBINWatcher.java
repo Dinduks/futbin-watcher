@@ -1,5 +1,6 @@
 package com.dindane.futbinwatcher;
 
+import com.dindane.futbinwatcher.exceptions.ParsedLine;
 import com.dindane.futbinwatcher.exceptions.UnsupportedPlatformException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,13 +17,13 @@ import static com.dindane.futbinwatcher.Platform.*;
 public class FutBINWatcher {
     private static final String urlPattern = "http://www.%s.com/player/%s";
 
-    public List<Player> getPrices(Platform platform, Map<String, Long> players) throws ConnectException, UnsupportedPlatformException {
+    public List<Player> getPrices(Platform platform, List<ParsedLine> players) throws ConnectException, UnsupportedPlatformException {
         List<Player> playersList = new ArrayList<>();
 
         String website = (platform == PC) ? "futpc" : "futbin";
 
-        for (Map.Entry<String, Long> idAndPrice : players.entrySet()) {
-            String url = String.format(urlPattern, website, idAndPrice.getKey());
+        for (ParsedLine line : players) {
+            String url = String.format(urlPattern, website, line.getPlayerId());
 
             Document doc;
 
@@ -60,8 +61,8 @@ public class FutBINWatcher {
                     throw new UnsupportedPlatformException("");
             }
 
-            playersList.add(new Player(playerName, idAndPrice.getKey(), idAndPrice.getValue(),
-                    lowestBin, lowestBin2, lowestBin3));
+            playersList.add(new Player(playerName, url, line.getTargetPrice(),
+                    lowestBin, lowestBin2, lowestBin3, line.getAction()));
         }
 
         return playersList;

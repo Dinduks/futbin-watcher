@@ -2,7 +2,9 @@ package com.dindane.futbinwatcher;
 
 import com.bethecoder.ascii_table.ASCIITable;
 import com.bethecoder.ascii_table.ASCIITableHeader;
+import com.dindane.futbinwatcher.exceptions.Action;
 import com.dindane.futbinwatcher.exceptions.IdParsingException;
+import com.dindane.futbinwatcher.exceptions.ParsedLine;
 import com.dindane.futbinwatcher.exceptions.UnsupportedPlatformException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -12,9 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.text.DecimalFormat;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,7 +32,7 @@ class CLI {
         initColors();
         checkForUpdates();
 
-        Map<String, Long> players = parsePlayersList();
+        List<ParsedLine> players = readPlayersList();
         FutBINWatcher watcher = new FutBINWatcher();
 
         while (true) {
@@ -111,22 +112,28 @@ class CLI {
     }
 
     private static String[][] listToString2DArray(List<Player> players) {
-        String[][] data = new String[players.size() + 2][4];
+        String[][] data = new String[players.size() + 2][5];
 
         for (int i = 0; i < players.size(); i++) {
-            data[i][0] = players.get(i).getName();
-            data[i][1] = formatNumber(players.get(i).getTargetPrice());
-            data[i][2] = formatNumber(players.get(i).getLowestBIN());
-            data[i][3] = colorize(formatNumber(players.get(i).getTargetPrice() - players.get(i).getLowestBIN()));
-
+            data[i][1] = players.get(i).getName();
+            data[i][2] = formatNumber(players.get(i).getTargetPrice());
+            data[i][3] = formatNumber(players.get(i).getLowestBIN());
+            if (players.get(i).getAction().equals(Action.BUY)) {
+                data[i][0] = "B";
+                data[i][4] = colorize(formatNumber(players.get(i).getTargetPrice() - players.get(i).getLowestBIN()));
+            } else {
+                data[i][0] = "S";
+                data[i][4] = colorize(formatNumber(-1 * (players.get(i).getTargetPrice() - players.get(i).getLowestBIN())));
+            }
         }
 
-        for (int i = 0; i < 4; i++) data[players.size()][i] = "";
+        for (int i = 0; i < 5; i++) data[players.size()][i] = "";
 
-        data[players.size() + 1][0] = "Total";
-        data[players.size() + 1][1] = formatNumber(totalTargetPrice(players));
-        data[players.size() + 1][2] = formatNumber(totalLowestBIN(players));
-        data[players.size() + 1][3] = colorize(formatNumber(totalTargetPrice(players) - totalLowestBIN(players)));
+        data[players.size() + 1][0] = "";
+        data[players.size() + 1][1] = "  Total";
+        data[players.size() + 1][2] = formatNumber(totalTargetPrice(players));
+        data[players.size() + 1][3] = formatNumber(totalLowestBIN(players));
+        data[players.size() + 1][4] = colorize(formatNumber(totalTargetPrice(players) - totalLowestBIN(players)));
 
         return data;
     }
@@ -164,17 +171,15 @@ class CLI {
         return result;
     }
 
-    private static Map<String, Long> parsePlayersList() throws IdParsingException {
-        Map<String, Long> players = new HashMap<>();
+    private static List<ParsedLine> readPlayersList() throws IdParsingException {
+        List<ParsedLine> players = new ArrayList<>();
 
         File file = new File("players_list.txt");
         try {
             List<String> lines = FileUtils.readLines(file, "UTF-8");
             for (String line : lines) {
                 if (line.length() == 0) continue;
-                String link = cleanFUTId(line.split(" ")[0]);
-                Long price = Long.parseLong(line.split(" ")[1]);
-                players.put(link, price);
+                players.add(parseLine(line));
             }
         } catch (Exception e) {
             System.err.println("Error while reading the players list.");
@@ -185,8 +190,52 @@ class CLI {
         return players;
     }
 
+    private static ParsedLine parseLine(String line) throws IdParsingException {
+        try {
+            String[] parts = line.split(" +");
+            if (parts.length == 2) {
+                System.out.println("\"link price\" notation is deprecated. Use \"buy link for price\" or \"sell link for price\".");
+                System.out.println("Check the manual for more information: http://dinduks.github.io/futbin-watcher/");
+
+                return new ParsedLine(cleanFUTId(parts[0]), Action.BUY, Long.parseLong(parts[1]));
+            } else if (parts.length == 3) {
+                try {
+                    Action action = Action.valueOf(parts[0].toUpperCase());
+                    return new ParsedLine(cleanFUTId(parts[1]), action, Long.parseLong(parts[2]));
+                } catch (Exception e) {
+                    System.err.println("Error while reading the players list.");
+                    System.out.println("The action parameter in \"" + line + "\" is not valid.");
+                    System.out.println("It should be either \"buy\" or \"sell\".");
+                    System.exit(-1);
+                    return null;
+                }
+            } else if (parts.length == 4) {
+                try {
+                    Action action = Action.valueOf(parts[0].toUpperCase());
+                    return new ParsedLine(cleanFUTId(parts[1]), action, Long.parseLong(parts[3]));
+                } catch (Exception e) {
+                    System.err.println("Error while reading the players list.");
+                    System.out.println("The action parameter in \"" + line + "\" is not valid.");
+                    System.out.println("It should be either \"buy\" or \"sell\".");
+                    System.exit(-1);
+                    return null;
+                }
+            } else {
+                System.err.println("Error while reading line \"" + line + "\".");
+                System.exit(-1);
+                return null;
+            }
+        } catch (NumberFormatException e) {
+            System.err.println("Error while reading the players list.");
+            System.out.println("The price parameter in \"" + line + "\" is not a number.");
+            System.exit(-1);
+            return null;
+        }
+    }
+
     private static void printPrices(List<Player> players) {
         ASCIITableHeader[] header = {
+                new ASCIITableHeader(" "),
                 new ASCIITableHeader("Name", ASCIITable.ALIGN_LEFT),
                 new ASCIITableHeader("Target price"),
                 new ASCIITableHeader("Lowest BIN"),

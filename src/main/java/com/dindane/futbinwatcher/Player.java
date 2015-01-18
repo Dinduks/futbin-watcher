@@ -1,5 +1,7 @@
 package com.dindane.futbinwatcher;
 
+import com.dindane.futbinwatcher.exceptions.Action;
+
 public class Player {
     private final String name;
     private final String url;
@@ -7,14 +9,16 @@ public class Player {
     private final Long lowestBIN;
     private final Long lowestBIN2;
     private final Long lowestBIN3;
+    private final Action action;
 
-    public Player(String name, String url, Long targetPrice, Long lowestBIN, Long lowestBIN2, Long lowestBIN3) {
+    public Player(String name, String url, Long targetPrice, Long lowestBIN, Long lowestBIN2, Long lowestBIN3, Action action) {
         this.name = name;
         this.url = url;
         this.targetPrice = targetPrice;
         this.lowestBIN = lowestBIN;
         this.lowestBIN2 = lowestBIN2;
         this.lowestBIN3 = lowestBIN3;
+        this.action = action;
     }
 
     public Long priceDifference() {
@@ -39,5 +43,13 @@ public class Player {
 
     public Long getLowestBIN3() {
         return lowestBIN3;
+    }
+
+    public Action getAction() {
+        return action;
+    }
+
+    public String getUrl() {
+        return url;
     }
 }

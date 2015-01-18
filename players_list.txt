@@ -1,6 +1,7 @@
-/player/21489/alexis-s%C3%A1nchez 400000
-/player/3086/sergio-ramos 170000
-/player/3095/marco-reus 80000
-/player/3101/vincent-kompany 30000
-/player/3076/iniesta 25000
-/player/3199/ramires 20000
+buy http://www.futpc.com/player/3095/marco-reus for 50000
+buy http://www.futpc.com/player/3095/marco-reus for 50000
+buy http://www.futpc.com/player/21344/de-gea for 400000
+buy http://www.futpc.com/player/3086/sergio-ramos for 170000
+buy http://www.futpc.com/player/21489/alexis-s%C3%A1nchez for 350000
+sell http://www.futpc.com/player/21449/diego-god%C3%ADn for 100000
+sell http://www.futpc.com/player/21451/nicol%C3%A1s-otamendi for 25000

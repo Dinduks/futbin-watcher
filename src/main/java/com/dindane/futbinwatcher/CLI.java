@@ -167,7 +167,7 @@ class CLI {
     private static Map<String, Long> parsePlayersList() throws IdParsingException {
         Map<String, Long> players = new HashMap<>();
 
-        File file = new File("players_list");
+        File file = new File("players_list.txt");
         try {
             List<String> lines = FileUtils.readLines(file, "UTF-8");
             for (String line : lines) {

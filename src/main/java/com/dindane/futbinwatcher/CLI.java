@@ -51,7 +51,6 @@ class CLI {
         if (delay != null) {
             while (true) {
                 List<Player> prices = watcher.getPrices(platform, players);
-                clearConsole();
                 printPrices(prices);
                 Thread.sleep(delay * 1000);
             }
@@ -61,15 +60,16 @@ class CLI {
         }
     }
 
-    private static void printPrices(List<Player> players) {
-        ASCIITableHeader[] header = {
-                new ASCIITableHeader("Name", ASCIITable.ALIGN_LEFT),
-                new ASCIITableHeader("Target price"),
-                new ASCIITableHeader("Lowest BIN"),
-                new ASCIITableHeader("Difference")
-        };
+    private static String colorize(String s) {
+        if (s.contains("-")) {
+            return "\u001B[31m" + s + "\u001B[0m";
+        } else {
+            return "\u001B[32m" + s + "\u001B[0m";
+        }
+    }
 
-        ASCIITable.getInstance().printTable(header, listToString2DArray(players));
+    private static String formatNumber(Long n) {
+        return new DecimalFormat("#,###").format(n);
     }
 
     private static String[][] listToString2DArray(List<Player> players) {
@@ -79,7 +79,8 @@ class CLI {
             data[i][0] = players.get(i).getName();
             data[i][1] = formatNumber(players.get(i).getTargetPrice());
             data[i][2] = formatNumber(players.get(i).getLowestBIN());
-            data[i][3] = formatNumber(players.get(i).getTargetPrice() - players.get(i).getLowestBIN());
+            data[i][3] = colorize(formatNumber(players.get(i).getTargetPrice() - players.get(i).getLowestBIN()));
+
         }
 
         for (int i = 0; i < 4; i++) data[players.size()][i] = "";
@@ -87,26 +88,9 @@ class CLI {
         data[players.size() + 1][0] = "Total";
         data[players.size() + 1][1] = formatNumber(totalTargetPrice(players));
         data[players.size() + 1][2] = formatNumber(totalLowestBIN(players));
-        data[players.size() + 1][3] = formatNumber(totalTargetPrice(players) - totalLowestBIN(players));
+        data[players.size() + 1][3] = colorize(formatNumber(totalTargetPrice(players) - totalLowestBIN(players)));
 
         return data;
-    }
-
-    private static Long totalTargetPrice(List<Player> players) {
-        Long total = 0L;
-        for (Player player : players) total += player.getTargetPrice();
-        return total;
-    }
-
-    private static Long totalLowestBIN(List<Player> players) {
-        Long total = 0L;
-        for (Player player : players) total += player.getLowestBIN();
-        return total;
-    }
-
-    private static String formatNumber(Long n) {
-        DecimalFormat formatter = new DecimalFormat("#,###");
-        return formatter.format(n);
     }
 
     private static Map<String, Long> parsePlayersList() {
@@ -116,6 +100,7 @@ class CLI {
         try {
             List<String> lines = FileUtils.readLines(file, "UTF-8");
             for (String line : lines) {
+                if (line.length() == 0) continue;
                 String link = line.split(" ")[0];
                 Long price = Long.parseLong(line.split(" ")[1]);
                 players.put(link, price);
@@ -129,15 +114,30 @@ class CLI {
         return players;
     }
 
-    public final static void clearConsole()
-    {
-        try {
-            final String os = System.getProperty("os.name");
-            if (os.contains("Windows")) {
-                Runtime.getRuntime().exec("cls");
-            } else {
-                Runtime.getRuntime().exec("clear");
-            }
-        } catch (final Exception e) {}
+    private static void printPrices(List<Player> players) {
+        ASCIITableHeader[] header = {
+                new ASCIITableHeader("Name", ASCIITable.ALIGN_LEFT),
+                new ASCIITableHeader("Target price"),
+                new ASCIITableHeader("Lowest BIN"),
+                new ASCIITableHeader("Difference")//, ASCIITable.DEFAULT_HEADER_ALIGN, ASCIITable.ALIGN_RIGHT)
+        };
+
+        String table = ASCIITable.getInstance().getTable(header, listToString2DArray(players));
+        table = table.replace("\u001B[3", "         \u001B[3");
+        System.out.println(table);
+    }
+
+    private static Long totalLowestBIN(List<Player> players) {
+        Long total = 0L;
+        for (Player player : players) total += player.getLowestBIN();
+
+        return total;
+    }
+
+    private static Long totalTargetPrice(List<Player> players) {
+        Long total = 0L;
+        for (Player player : players) total += player.getTargetPrice();
+
+        return total;
     }
 }

@@ -9,5 +9,5 @@ mvn clean install
 cd ..
 rm -rf futbin-watcher/**.zip futbin-watcher/**.jar
 cp futbin-watcher/target/futbin-watcher-**-jar-with-dependencies.jar futbin-watcher/
-zip -r futbin-watcher/futbin-watcher.zip futbin-watcher/**jar futbin-watcher/run** futbin-watcher/players_list.txt
+zip -r futbin-watcher/futbin-watcher-`less futbin-watcher/src/main/resources/com/dindane/futbinwatcher/version`.zip futbin-watcher/**jar futbin-watcher/run** futbin-watcher/players_list.txt
 cd -

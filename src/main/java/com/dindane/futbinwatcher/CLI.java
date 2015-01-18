@@ -17,48 +17,22 @@ import java.util.regex.Pattern;
 
 class CLI {
     public static void main(String[] args) throws ConnectException, InterruptedException, UnsupportedPlatformException, IdParsingException {
-        if (args.length < 1) {
-            System.err.println("No enough arguments. Please specify the platform, and optionally the refresh rate.");
-            System.exit(-1);
-        }
-
-        Platform platform;
-
-        try {
-            platform = Platform.valueOf(args[0].toUpperCase());
-        } catch (Exception e) {
-            throw new UnsupportedPlatformException(String.format("Platform \"%s\" not supported.", args[0]));
-        }
-
-        Integer delay = null;
-        if (args.length >= 2) {
-            try {
-                delay = Integer.parseInt(args[1]);
-            } catch (NumberFormatException e) {
-                System.err.println("The delay is not a number.");
-                System.exit(-1);
-            }
-
-            if (delay < 120) {
-                delay = 120;
-                System.out.println("The delay cannot be lower than 120 seconds in order to not flood " +
-                        "FutBIN's servers. It was forced to 120 seconds.");
-            }
-        }
+        Object[] parsedArguments = parseArguments(args);
+        Platform platform = (Platform) parsedArguments[0];
+        Integer delay = (Integer) parsedArguments[1];
 
         Map<String, Long> players = parsePlayersList();
-
         FutBINWatcher watcher = new FutBINWatcher();
 
-        if (delay != null) {
+        if (delay == null) {
+            List<Player> prices = watcher.getPrices(platform, players);
+            printPrices(prices);
+        } else {
             while (true) {
                 List<Player> prices = watcher.getPrices(platform, players);
                 printPrices(prices);
                 Thread.sleep(delay * 1000);
             }
-        } else {
-            List<Player> prices = watcher.getPrices(platform, players);
-            printPrices(prices);
         }
     }
 
@@ -107,6 +81,39 @@ class CLI {
         data[players.size() + 1][3] = colorize(formatNumber(totalTargetPrice(players) - totalLowestBIN(players)));
 
         return data;
+    }
+
+    private static Object[] parseArguments(String[] args) throws UnsupportedPlatformException {
+        Object[] result = new Object[2];
+
+        if (args.length < 1) {
+            System.err.println("No enough arguments. Please specify the platform, and optionally the refresh rate.");
+            System.exit(-1);
+        }
+
+        try {
+            result[0] = Platform.valueOf(args[0].toUpperCase());
+        } catch (Exception e) {
+            throw new UnsupportedPlatformException(String.format("Platform \"%s\" not supported.", args[0]));
+        }
+
+        result[1] = null;
+        if (args.length >= 2) {
+            try {
+                result[1] = Integer.parseInt(args[1]);
+            } catch (NumberFormatException e) {
+                System.err.println("The delay is not a number.");
+                System.exit(-1);
+            }
+
+            if ((Integer) result[1] < 120) {
+                result[1] = 120;
+                System.out.println("The delay cannot be lower than 120 seconds in order to not flood " +
+                        "FutBIN's servers. Delay forced to 120 seconds.");
+            }
+        }
+
+        return result;
     }
 
     private static Map<String, Long> parsePlayersList() throws IdParsingException {

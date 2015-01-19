@@ -1,1 +1,1 @@
-java -jar futbin-watcher-1.1.1-jar-with-dependencies.jar pc 2
+java -jar futbin-watcher-1.1.2-jar-with-dependencies.jar pc 2

@@ -1,7 +1,7 @@
 ---
 title: "Prerequisites"
-bg: blue
-color: white
+bg: orange
+color: black
 fa-icon: check-square-o
 ---
 

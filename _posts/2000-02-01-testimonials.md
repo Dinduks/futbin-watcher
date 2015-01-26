@@ -1,7 +1,7 @@
 ---
 title: "Testimonials"
-bg: white
-color: black
+bg: blue
+color: white
 style: center
 fa-icon: heart
 ---

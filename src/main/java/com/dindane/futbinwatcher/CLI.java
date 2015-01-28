@@ -35,10 +35,12 @@ class CLI {
     private Boolean showHelp = false;
 
     @Option(name = "--lowest-bin-2", required = false, usage = "Display the second lowest BIN row.")
-    private Boolean lowestBin2;
+    private Boolean lowestBin2 = false;
 
     @Option(name = "--lowest-bin-3", required = false, usage = "Display the third lowest BIN row.")
-    private Boolean lowestBin3;
+    private Boolean lowestBin3 = false;
+
+    private Integer headerSize = 5;
 
     private static String COLOR_RED = null;
     private static String COLOR_GREEN = null;
@@ -52,11 +54,15 @@ class CLI {
         CmdLineParser parser = new CmdLineParser(this);
         try {
             parser.parseArgument(args);
-            refreshDelay = refreshDelay * 60;
+
             if (showHelp) {
                 parser.printUsage(System.err);
                 return;
             }
+
+            refreshDelay = refreshDelay * 60;
+            if (lowestBin2) headerSize++;
+            if (lowestBin3) headerSize++;
         } catch (CmdLineException e) {
             System.err.println(e.getMessage());
             return;
@@ -85,7 +91,7 @@ class CLI {
         }
     }
 
-    private static void checkForUpdates() {
+    private void checkForUpdates() {
         String localVersion = null;
         try {
             localVersion = IOUtils.toString(Thread.currentThread().getContextClassLoader().getResourceAsStream("com/dindane/futbinwatcher/version"), "UTF-8");
@@ -119,7 +125,7 @@ class CLI {
     /**
      * Extracts the player's ID from a string
      */
-    private static String cleanFUTId(String id) throws IdParsingException {
+    private String cleanFUTId(String id) throws IdParsingException {
         Pattern p = Pattern.compile("\\d+.*$");
         Matcher m = p.matcher(id);
 
@@ -130,7 +136,7 @@ class CLI {
         }
     }
 
-    private static String colorize(String s) {
+    private String colorize(String s) {
         if (s.contains("-")) {
             return COLOR_RED + s + COLOR_RESET;
         } else {
@@ -138,11 +144,11 @@ class CLI {
         }
     }
 
-    private static String formatNumber(Long n) {
+    private String formatNumber(Long n) {
         return new DecimalFormat("#,###").format(n);
     }
 
-    private static void initColors() {
+    private void initColors() {
         if (System.getProperty("os.name").contains("Windows")) {
             COLOR_RED = "";
             COLOR_GREEN = "";
@@ -154,63 +160,36 @@ class CLI {
         }
     }
 
-    private static String[][] listToString2DArray(List<Player> players, Action action) {
-        String[][] data = new String[players.size() + 2][5];
+    private String[][] listToString2DArray(List<Player> players, Action action) {
+        String[][] data = new String[players.size() + 2][headerSize];
         Integer mult = (action.equals(Action.BUY)) ? 1 : -1;
 
         for (int i = 0; i < players.size(); i++) {
-            data[i][0] = (action.equals(Action.BUY)) ? "B" : "S";
-            data[i][1] = players.get(i).getName();
-            data[i][2] = formatNumber(players.get(i).getTargetPrice());
-            data[i][3] = formatNumber(players.get(i).getLowestBIN());
-            data[i][4] = colorize(formatNumber(mult * (players.get(i).getTargetPrice() - players.get(i).getLowestBIN())));
+            Integer j = 0;
+            data[i][j++] = (action.equals(Action.BUY)) ? "B" : "S";
+            data[i][j++] = players.get(i).getName();
+            data[i][j++] = formatNumber(players.get(i).getTargetPrice());
+            data[i][j++] = formatNumber(players.get(i).getLowestBIN());
+            if (lowestBin2) data[i][j++] = formatNumber(players.get(i).getLowestBIN2());
+            if (lowestBin3) data[i][j++] = formatNumber(players.get(i).getLowestBIN3());
+            data[i][j++] = colorize(formatNumber(mult * (players.get(i).getTargetPrice() - players.get(i).getLowestBIN())));
         }
 
-        for (int i = 0; i < 5; i++) data[players.size()][i] = "";
+        for (int i = 0; i < headerSize; i++) data[players.size()][i] = "";
 
-        data[players.size() + 1][0] = "";
-        data[players.size() + 1][1] = "  Total";
-        data[players.size() + 1][2] = formatNumber(totalTargetPrice(players));
-        data[players.size() + 1][3] = formatNumber(totalLowestBIN(players));
-        data[players.size() + 1][4] = colorize(formatNumber(mult * (totalTargetPrice(players) - totalLowestBIN(players))));
+        Integer j = 0;
+        data[players.size() + 1][j++] = "";
+        data[players.size() + 1][j++] = "  Total";
+        data[players.size() + 1][j++] = formatNumber(totalTargetPrice(players));
+        data[players.size() + 1][j++] = formatNumber(totalLowestBIN(players));
+        if (lowestBin2) data[players.size() + 1][j++] = formatNumber(totalLowestBIN2(players));
+        if (lowestBin3) data[players.size() + 1][j++] = formatNumber(totalLowestBIN3(players));
+        data[players.size() + 1][j++] = colorize(formatNumber(mult * (totalTargetPrice(players) - totalLowestBIN(players))));
 
         return data;
     }
 
-    private static Object[] parseArguments(String[] args) throws UnsupportedPlatformException {
-        Object[] result = new Object[2];
-
-        if (args.length < 1) {
-            System.err.println("No enough arguments. Please specify the platform, and optionally the refresh rate.");
-            System.exit(-1);
-        }
-
-        try {
-            result[0] = Platform.valueOf(args[0].toUpperCase());
-        } catch (Exception e) {
-            throw new UnsupportedPlatformException(String.format("Platform \"%s\" not supported.", args[0]));
-        }
-
-        result[1] = 120;
-        if (args.length >= 2) {
-            try {
-                result[1] = 60 * Integer.parseInt(args[1]);
-            } catch (NumberFormatException e) {
-                System.err.println("The specified refresh delay is not a number.");
-                System.exit(-1);
-            }
-
-            if ((Integer) result[1] < 120) {
-                result[1] = 120;
-                System.out.println("The refresh delay cannot be lower than 120 seconds in order to not flood " +
-                        "FutBIN's servers. Refresh delay forced to 2 minutes.");
-            }
-        }
-
-        return result;
-    }
-
-    private static List<ParsedLine> readPlayersList() throws IdParsingException {
+    private List<ParsedLine> readPlayersList() throws IdParsingException {
         List<ParsedLine> players = new ArrayList<>();
 
         File file = new File("players_list.txt");
@@ -230,7 +209,7 @@ class CLI {
         return players;
     }
 
-    private static ParsedLine parseLine(String line) throws IdParsingException {
+    private ParsedLine parseLine(String line) throws IdParsingException {
         try {
             String[] parts = line.split(" +");
             if (parts.length == 2) {
@@ -273,28 +252,44 @@ class CLI {
         }
     }
 
-    private static void printPrices(List<Player> players, Action action) {
-        ASCIITableHeader[] header = {
-                new ASCIITableHeader(" "),
-                new ASCIITableHeader("Name", ASCIITable.ALIGN_LEFT),
-                new ASCIITableHeader("Target price"),
-                new ASCIITableHeader("Lowest BIN"),
-                new ASCIITableHeader("Difference")
-        };
+    private void printPrices(List<Player> players, Action action) {
+        Integer i = 0;
+        ASCIITableHeader[] header = new ASCIITableHeader[headerSize];
+        header[i++] = new ASCIITableHeader(" ");
+        header[i++] = new ASCIITableHeader("Name", ASCIITable.ALIGN_LEFT);
+        header[i++] = new ASCIITableHeader("Target price");
+        header[i++] = new ASCIITableHeader("Lowest BIN");
+        if (lowestBin2) header[i++] = new ASCIITableHeader("Lowest BIN 2");
+        if (lowestBin3) header[i++] = new ASCIITableHeader("Lowest BIN 3");
+        header[i] = new ASCIITableHeader("Difference");
 
         String table = ASCIITable.getInstance().getTable(header, listToString2DArray(players, action));
         table = table.replace("\u001B[31", "         \u001B[31").replace("\u001B[32", "         \u001B[32");
         System.out.println(table);
     }
 
-    private static Long totalLowestBIN(List<Player> players) {
+    private Long totalLowestBIN(List<Player> players) {
         Long total = 0L;
         for (Player player : players) total += player.getLowestBIN();
 
         return total;
     }
 
-    private static Long totalTargetPrice(List<Player> players) {
+    private Long totalLowestBIN2(List<Player> players) {
+        Long total = 0L;
+        for (Player player : players) total += player.getLowestBIN2();
+
+        return total;
+    }
+
+    private Long totalLowestBIN3(List<Player> players) {
+        Long total = 0L;
+        for (Player player : players) total += player.getLowestBIN3();
+
+        return total;
+    }
+
+    private Long totalTargetPrice(List<Player> players) {
         Long total = 0L;
         for (Player player : players) total += player.getTargetPrice();
 

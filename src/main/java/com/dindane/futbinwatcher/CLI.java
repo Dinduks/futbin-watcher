@@ -60,7 +60,13 @@ class CLI {
                 return;
             }
 
+            if (refreshDelay < 2) {
+                System.out.println("The refresh delay cannot be lower than 2 minutes in order to not flood " +
+                        "FutBIN's servers. Refresh delay forced to 2 minutes.");
+                refreshDelay = 2;
+            }
             refreshDelay = refreshDelay * 60;
+
             if (lowestBin2) headerSize++;
             if (lowestBin3) headerSize++;
         } catch (CmdLineException e) {

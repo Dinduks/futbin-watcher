@@ -34,10 +34,10 @@ class CLI {
     @Option(name = "--help", aliases = {"-h"}, help = true)
     private Boolean showHelp = false;
 
-    @Option(name = "--lowest-bin-2", required = false, usage = "Display the second lowest BIN row.")
+    @Option(name = "--lowest-bin-2", required = false, usage = "Display the second lowest BIN column.")
     private Boolean lowestBin2 = false;
 
-    @Option(name = "--lowest-bin-3", required = false, usage = "Display the third lowest BIN row.")
+    @Option(name = "--lowest-bin-3", required = false, usage = "Display the third lowest BIN column.")
     private Boolean lowestBin3 = false;
 
     private Integer headerSize = 5;

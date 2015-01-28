@@ -8,6 +8,9 @@ import com.dindane.futbinwatcher.exceptions.ParsedLine;
 import com.dindane.futbinwatcher.exceptions.UnsupportedPlatformException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,14 +23,44 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class CLI {
+    @Option(name = "--platform",
+            required = true, usage = "The market's platform.")
+    private Platform platform;
+
+    @Option(name = "--refresh-delay",
+            required = false, usage = "Refresh delay. Must be higher than 2.")
+    private Integer refreshDelay = 2 * 60;
+
+    @Option(name = "--help", aliases = {"-h"}, help = true)
+    private Boolean showHelp = false;
+
+    @Option(name = "--lowest-bin-2", required = false, usage = "Display the second lowest BIN row.")
+    private Boolean lowestBin2;
+
+    @Option(name = "--lowest-bin-3", required = false, usage = "Display the third lowest BIN row.")
+    private Boolean lowestBin3;
+
     private static String COLOR_RED = null;
     private static String COLOR_GREEN = null;
     private static String COLOR_RESET = null;
 
     public static void main(String[] args) throws IOException, InterruptedException, UnsupportedPlatformException, IdParsingException {
-        Object[] parsedArguments = parseArguments(args);
-        Platform platform = (Platform) parsedArguments[0];
-        Integer delay = (Integer) parsedArguments[1];
+        new CLI().doMain(args);
+    }
+
+    private void doMain(String[] args) throws IOException, InterruptedException, UnsupportedPlatformException, IdParsingException {
+        CmdLineParser parser = new CmdLineParser(this);
+        try {
+            parser.parseArgument(args);
+            refreshDelay = refreshDelay * 60;
+            if (showHelp) {
+                parser.printUsage(System.err);
+                return;
+            }
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            return;
+        }
 
         initColors();
         checkForUpdates();
@@ -48,7 +81,7 @@ class CLI {
             if (buyPrices.size() > 0) printPrices(buyPrices, Action.BUY);
             if (sellPrices.size() > 0) printPrices(sellPrices, Action.SELL);
 
-            Thread.sleep(delay * 1000);
+            Thread.sleep(refreshDelay * 1000);
         }
     }
 

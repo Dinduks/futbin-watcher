@@ -27,6 +27,10 @@ class CLI {
             required = true, usage = "The market's platform.")
     private Platform platform;
 
+    @Option(name = "--players-list",
+            required = true, usage = "The monitored players' list file.")
+    private String playersListFileName;
+
     @Option(name = "--refresh-delay",
             required = false, usage = "Refresh delay. Must be higher than 2.")
     private Integer refreshDelay = 2 * 60;
@@ -198,7 +202,7 @@ class CLI {
     private List<ParsedLine> readPlayersList() throws IdParsingException {
         List<ParsedLine> players = new ArrayList<>();
 
-        File file = new File("players_list.txt");
+        File file = new File(playersListFileName);
         try {
             List<String> lines = FileUtils.readLines(file, "UTF-8");
             for (String line : lines) {

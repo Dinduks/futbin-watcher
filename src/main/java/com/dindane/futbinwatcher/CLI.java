@@ -154,7 +154,7 @@ class CLI {
         }
     }
 
-    private String formatNumber(Long n) {
+    private String formatNumber(Number n) {
         return new DecimalFormat("#,###").format(n);
     }
 
@@ -172,9 +172,9 @@ class CLI {
 
     private String[][] listToString2DArray(List<Player> players, Action action) {
         String[][] data = new String[players.size() + 2][headerSize];
-        Integer mult = (action.equals(Action.BUY)) ? 1 : -1;
+        Double mult = (action.equals(Action.BUY)) ? -1 : 0.95;
 
-        for (int i = 0; i < players.size(); i++) {
+        for (Integer i = 0; i < players.size(); i++) {
             Integer j = 0;
             data[i][j++] = (action.equals(Action.BUY)) ? "B" : "S";
             data[i][j++] = players.get(i).getName();
@@ -182,10 +182,10 @@ class CLI {
             data[i][j++] = formatNumber(players.get(i).getLowestBIN());
             if (lowestBin2) data[i][j++] = formatNumber(players.get(i).getLowestBIN2());
             if (lowestBin3) data[i][j++] = formatNumber(players.get(i).getLowestBIN3());
-            data[i][j++] = colorize(formatNumber(mult * (players.get(i).getTargetPrice() - players.get(i).getLowestBIN())));
+            data[i][j] = colorize(formatNumber(mult * (players.get(i).getTargetPrice() - players.get(i).getLowestBIN())));
         }
 
-        for (int i = 0; i < headerSize; i++) data[players.size()][i] = "";
+        for (Integer i = 0; i < headerSize; i++) data[players.size()][i] = "";
 
         Integer j = 0;
         data[players.size() + 1][j++] = "";
@@ -194,7 +194,7 @@ class CLI {
         data[players.size() + 1][j++] = formatNumber(totalLowestBIN(players));
         if (lowestBin2) data[players.size() + 1][j++] = formatNumber(totalLowestBIN2(players));
         if (lowestBin3) data[players.size() + 1][j++] = formatNumber(totalLowestBIN3(players));
-        data[players.size() + 1][j++] = colorize(formatNumber(mult * (totalTargetPrice(players) - totalLowestBIN(players))));
+        data[players.size() + 1][j] = colorize(formatNumber(mult * (totalTargetPrice(players) - totalLowestBIN(players))));
 
         return data;
     }
@@ -271,7 +271,7 @@ class CLI {
         header[i++] = new ASCIITableHeader("Lowest BIN");
         if (lowestBin2) header[i++] = new ASCIITableHeader("Lowest BIN 2");
         if (lowestBin3) header[i++] = new ASCIITableHeader("Lowest BIN 3");
-        header[i] = new ASCIITableHeader("Difference");
+        header[i] = new ASCIITableHeader("Difference - 5%");
 
         String table = ASCIITable.getInstance().getTable(header, listToString2DArray(players, action));
         table = table.replace("\u001B[31", "         \u001B[31").replace("\u001B[32", "         \u001B[32");

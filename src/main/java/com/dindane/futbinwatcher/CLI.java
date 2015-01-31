@@ -33,7 +33,7 @@ class CLI {
 
     @Option(name = "--refresh-delay",
             required = false, usage = "Refresh delay. Must be higher than 2.")
-    private Integer refreshDelay = 2 * 60;
+    private Integer refreshDelay = 2;
 
     @Option(name = "--help", aliases = {"-h"}, help = true)
     private Boolean showHelp = false;
@@ -271,7 +271,7 @@ class CLI {
         header[i++] = new ASCIITableHeader("Lowest BIN");
         if (lowestBin2) header[i++] = new ASCIITableHeader("Lowest BIN 2");
         if (lowestBin3) header[i++] = new ASCIITableHeader("Lowest BIN 3");
-        header[i] = new ASCIITableHeader("Difference - 5%");
+        header[i] = new ASCIITableHeader((action.equals(Action.BUY)) ? "Difference" : "Difference - 5%");
 
         String table = ASCIITable.getInstance().getTable(header, listToString2DArray(players, action));
         table = table.replace("\u001B[31", "         \u001B[31").replace("\u001B[32", "         \u001B[32");

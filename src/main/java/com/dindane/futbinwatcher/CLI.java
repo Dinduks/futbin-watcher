@@ -172,7 +172,7 @@ class CLI {
 
     private String[][] listToString2DArray(List<Player> players, Action action) {
         String[][] data = new String[players.size() + 2][headerSize];
-        Double mult = (action.equals(Action.BUY)) ? -1 : 0.95;
+        Double mult = (action.equals(Action.BUY)) ? 1 : -0.95;
 
         for (Integer i = 0; i < players.size(); i++) {
             Integer j = 0;

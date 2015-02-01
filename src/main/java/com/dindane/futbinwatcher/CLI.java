@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,6 +46,8 @@ class CLI {
     private Boolean lowestBin3 = false;
 
     private Integer headerSize = 5;
+
+    private Boolean firstRun = true;
 
     private static String COLOR_RED = null;
     private static String COLOR_GREEN = null;
@@ -85,6 +88,9 @@ class CLI {
         FutBINWatcher watcher = new FutBINWatcher();
 
         while (true) {
+            if (!firstRun) System.out.println("Refreshing…");
+            System.out.println("Time: " + new Date() + "\n");
+
             List<Player> prices = watcher.getPrices(platform, players);
             List<Player> buyPrices = new ArrayList<>();
             List<Player> sellPrices = new ArrayList<>();
@@ -96,6 +102,8 @@ class CLI {
 
             if (buyPrices.size() > 0) printPrices(buyPrices, Action.BUY);
             if (sellPrices.size() > 0) printPrices(sellPrices, Action.SELL);
+
+            firstRun = false;
 
             Thread.sleep(refreshDelay * 1000);
         }

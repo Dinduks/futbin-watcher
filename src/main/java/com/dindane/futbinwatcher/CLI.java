@@ -180,29 +180,37 @@ class CLI {
 
     private String[][] listToString2DArray(List<Player> players, Action action) {
         String[][] data = new String[players.size() + 2][headerSize];
-        Double mult = (action.equals(Action.BUY)) ? 1 : -0.95;
 
         for (Integer i = 0; i < players.size(); i++) {
             Integer j = 0;
+            double diff;
+            if (action.equals(Action.BUY)) diff = players.get(i).getTargetPrice() - players.get(i).getLowestBIN();
+            else                           diff = (0.95 * players.get(i).getLowestBIN()) - players.get(i).getTargetPrice();
+
             data[i][j++] = (action.equals(Action.BUY)) ? "B" : "S";
             data[i][j++] = players.get(i).getName();
             data[i][j++] = formatNumber(players.get(i).getTargetPrice());
             data[i][j++] = formatNumber(players.get(i).getLowestBIN());
             if (lowestBin2) data[i][j++] = formatNumber(players.get(i).getLowestBIN2());
             if (lowestBin3) data[i][j++] = formatNumber(players.get(i).getLowestBIN3());
-            data[i][j] = colorize(formatNumber(mult * (players.get(i).getTargetPrice() - players.get(i).getLowestBIN())));
+            data[i][j] = colorize(formatNumber(diff));
         }
 
         for (Integer i = 0; i < headerSize; i++) data[players.size()][i] = "";
 
         Integer j = 0;
+
+        double diff;
+        if (action.equals(Action.BUY)) diff = totalTargetPrice(players) - totalLowestBIN(players);
+        else                           diff = (0.95 * totalLowestBIN(players)) - totalTargetPrice(players);
+
         data[players.size() + 1][j++] = "";
         data[players.size() + 1][j++] = "  Total";
         data[players.size() + 1][j++] = formatNumber(totalTargetPrice(players));
         data[players.size() + 1][j++] = formatNumber(totalLowestBIN(players));
         if (lowestBin2) data[players.size() + 1][j++] = formatNumber(totalLowestBIN2(players));
         if (lowestBin3) data[players.size() + 1][j++] = formatNumber(totalLowestBIN3(players));
-        data[players.size() + 1][j] = colorize(formatNumber(mult * (totalTargetPrice(players) - totalLowestBIN(players))));
+        data[players.size() + 1][j] = colorize(formatNumber(diff));
 
         return data;
     }

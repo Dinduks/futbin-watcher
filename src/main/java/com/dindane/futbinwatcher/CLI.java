@@ -62,6 +62,12 @@ class CLI {
         try {
             parser.parseArgument(args);
 
+            if (platform == Platform.PC) {
+                System.err.println("The only supported platforms are XBOX and " +
+                        "PS since futpc.com is not maintained anymore.");
+                System.exit(-1);
+            }
+
             if (showHelp) {
                 parser.printUsage(System.err);
                 return;

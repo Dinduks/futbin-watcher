@@ -150,11 +150,11 @@ class CLI {
      * Extracts the player's ID from a string
      */
     private String cleanFUTId(String id) throws IdParsingException {
-        Pattern p = Pattern.compile("\\d+.*$");
+        Pattern p = Pattern.compile("16/player/(\\d+.*$)");
         Matcher m = p.matcher(id);
 
         if (m.find()) {
-            return m.group(0);
+            return m.group(1);
         } else {
             throw new IdParsingException(String.format("Could not extract the player's id from \"%s\".", id));
         }

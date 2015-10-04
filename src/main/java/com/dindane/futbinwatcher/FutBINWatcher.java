@@ -15,7 +15,7 @@ import java.util.Map;
 import static com.dindane.futbinwatcher.Platform.*;
 
 public class FutBINWatcher {
-    private static final String urlPattern = "http://www.%s.com/player/%s";
+    private static final String urlPattern = "http://www.%s.com/16/player/%s";
 
     public List<Player> getPrices(Platform platform, List<ParsedLine> players) throws ConnectException, UnsupportedPlatformException {
         List<Player> playersList = new ArrayList<>();
@@ -46,16 +46,16 @@ public class FutBINWatcher {
                     lowestBin3 = parseLong(Xsoup.compile("//td/text()").evaluate(doc).list().get(2));
                     break;
                 case XBOX:
-                    playerName = Xsoup.compile("//td/text()").evaluate(doc).list().get(8);
-                    lowestBin  = parseLong(Xsoup.compile("//div[contains(@id, \"xboxlowest\")]/text()").evaluate(doc).list().get(0));
-                    lowestBin2 = parseLong(Xsoup.compile("//div[contains(@id, \"xboxlowest2\")]/text()").evaluate(doc).list().get(0));
-                    lowestBin3 = parseLong(Xsoup.compile("//div[contains(@id, \"xboxlowest3\")]/text()").evaluate(doc).list().get(0));
+                    playerName = Xsoup.compile("//table[contains(@id, \"info\")]//tbody//tr").evaluate(doc).getElements().get(0).child(0).childNode(0).toString();
+                    lowestBin  = parseLong(Xsoup.compile("//span[contains(@id, \"xboxlbin\")]/text()").evaluate(doc).list().get(0));
+                    lowestBin2 = -1L;
+                    lowestBin3 = -1L;
                     break;
                 case PS:
-                    playerName = Xsoup.compile("//td/text()").evaluate(doc).list().get(8);
-                    lowestBin  = parseLong(Xsoup.compile("//div[contains(@id, \"pslowest\")]/text()").evaluate(doc).list().get(0));
-                    lowestBin2 = parseLong(Xsoup.compile("//div[contains(@id, \"pslowest2\")]/text()").evaluate(doc).list().get(0));
-                    lowestBin3 = parseLong(Xsoup.compile("//div[contains(@id, \"pslowest3\")]/text()").evaluate(doc).list().get(0));
+                    playerName = Xsoup.compile("//table[contains(@id, \"info\")]//tbody//tr").evaluate(doc).getElements().get(0).child(0).childNode(0).toString();
+                    lowestBin  = parseLong(Xsoup.compile("//span[contains(@id, \"pslbin\")]/text()").evaluate(doc).list().get(0));
+                    lowestBin2 = -1L;
+                    lowestBin3 = -1L;
                     break;
                 default:
                     throw new UnsupportedPlatformException("");

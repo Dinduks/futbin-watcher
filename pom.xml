@@ -6,7 +6,7 @@
 
     <groupId>com.dindane</groupId>
     <artifactId>futbin-watcher</artifactId>
-    <version>1.2.7</version>
+    <version>2.0.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
